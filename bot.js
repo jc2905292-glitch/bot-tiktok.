@@ -16,7 +16,7 @@ bot.onText(/\/start/, (msg) => {
     const firstName = msg.from.first_name;
     const username = msg.from.username ? `@${msg.from.username}` : 'Sin usuario';
 
-    // ALERTA AL ADMINISTRADOR
+    // ALERTA AL ADMINISTRADOR: INICIO EL BOT
     if (chatId.toString() !== ADMIN_ID) {
         const alertaAdmin = `🔔 *NUEVO USUARIO*\n👤 Nombre: ${firstName}\n🔗 Usuario: ${username}\n💬 Acción: Entró al bot (/start)`;
         bot.sendMessage(ADMIN_ID, alertaAdmin, { parse_mode: 'Markdown' }).catch(err => console.log(err));
@@ -27,7 +27,8 @@ bot.onText(/\/start/, (msg) => {
     const opcionesBotones = {
         reply_markup: {
             inline_keyboard: [
-                [{ text: "🌐 Iniciar Método (Ir a la Web)", url: "https://cuponestiktok-8b7cb.web.app" }],
+                // AHORA ESTE BOTÓN ES INTERNO PARA PODER RASTREAR EL CLIC
+                [{ text: "🌐 Iniciar Método (Ir a la Web)", callback_data: "iniciar_metodo" }],
                 [{ text: "📱 Ver Requisitos de iOS", callback_data: "requisitos" }],
                 [{ text: "🆘 Contactar Administrador", url: "https://t.me/wilmerlucena" }] 
             ]
@@ -37,15 +38,16 @@ bot.onText(/\/start/, (msg) => {
     bot.sendMessage(chatId, mensajeBienvenida, opcionesBotones);
 });
 
-// RESPUESTA AL BOTÓN "Ver Requisitos"
+// RESPUESTAS A LOS CLICS DE LOS BOTONES
 bot.on('callback_query', (query) => {
     const chatId = query.message.chat.id;
     const firstName = query.from.first_name;
     const username = query.from.username ? `@${query.from.username}` : 'Sin usuario';
 
+    // SI TOCA "VER REQUISITOS"
     if (query.data === 'requisitos') {
         
-        // ALERTA AL ADMINISTRADOR
+        // ALERTA AL ADMINISTRADOR: VIO REQUISITOS
         if (chatId.toString() !== ADMIN_ID) {
             const alertaAdmin = `🖱️ *NUEVO CLIC*\n👤 Nombre: ${firstName}\n🔗 Usuario: ${username}\n👆 Acción: Vio los requisitos de iOS`;
             bot.sendMessage(ADMIN_ID, alertaAdmin, { parse_mode: 'Markdown' }).catch(err => console.log(err));
@@ -54,6 +56,29 @@ bot.on('callback_query', (query) => {
         const mensajeRequisitos = "⚠️ *REQUISITOS IMPORTANTES:*\n\n1️⃣ Exclusivo para dispositivos iPhone (iOS).\n2️⃣ Necesitarás cambiar la región de tu teléfono a USA.\n3️⃣ Te daremos un VPN y dirección de casillero durante el registro en nuestra web.\n\n¡Si cumples con esto, toca el botón 🌐 *Iniciar Método*!";
         bot.sendMessage(chatId, mensajeRequisitos, { parse_mode: 'Markdown' });
     }
+
+    // SI TOCA "INICIAR MÉTODO"
+    if (query.data === 'iniciar_metodo') {
+        
+        // ALERTA AL ADMINISTRADOR: INICIÓ MÉTODO
+        if (chatId.toString() !== ADMIN_ID) {
+            const alertaAdmin = `🚀 *NUEVO CLIC EN INICIAR*\n👤 Nombre: ${firstName}\n🔗 Usuario: ${username}\n🌐 Acción: Hizo clic para ir a la Página Web`;
+            bot.sendMessage(ADMIN_ID, alertaAdmin, { parse_mode: 'Markdown' }).catch(err => console.log(err));
+        }
+
+        // LE DAMOS EL ACCESO REAL A LA PÁGINA AL USUARIO
+        const mensajeIrWeb = "Excelente decisión. 🌐\n\nToca el botón de abajo para entrar a nuestra plataforma segura y comenzar el proceso:";
+        const botonWeb = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: "👉 ENTRAR A LA PÁGINA WEB 👈", url: "https://cuponestiktok-8b7cb.web.app" }]
+                ]
+            }
+        };
+        bot.sendMessage(chatId, mensajeIrWeb, botonWeb);
+    }
+
+    // Le decimos a Telegram que ya respondimos al clic para que no se quede cargando
     bot.answerCallbackQuery(query.id);
 });
 
