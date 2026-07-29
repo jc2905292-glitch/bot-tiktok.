@@ -27,9 +27,10 @@ bot.onText(/\/start/, (msg) => {
     const opcionesBotones = {
         reply_markup: {
             inline_keyboard: [
-                // AHORA ESTE BOTÓN ES INTERNO PARA PODER RASTREAR EL CLIC
                 [{ text: "🌐 Iniciar Método (Ir a la Web)", callback_data: "iniciar_metodo" }],
                 [{ text: "📱 Ver Requisitos de iOS", callback_data: "requisitos" }],
+                // 👇 AQUÍ ESTÁ EL NUEVO BOTÓN DEL CANAL DE DUDAS 👇
+                [{ text: "💬 Unirse al Canal de Dudas", url: "https://t.me/+G7a47oWfVVgwZWYx" }],
                 [{ text: "🆘 Contactar Administrador", url: "https://t.me/wilmerlucena" }] 
             ]
         }
