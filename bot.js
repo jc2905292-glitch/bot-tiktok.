@@ -71,11 +71,13 @@ bot.onText(/\/start/, (msg) => {
 
     const botones = [
         [{ text: "🌐 Iniciar Método (Ir a la Web)", callback_data: "iniciar_metodo" }],
-        [{ text: "🎁 Ganar Dólares por Invitar", callback_data: "info_referidos" }],
+        [{ text: "📱 Ver Requisitos iOS", callback_data: "ver_requisitos" }],
+        [{ text: "🎁 Ganar Puntos / Dólares por Invitar", callback_data: "info_referidos" }],
         [{ text: "💬 Unirse al Canal", url: "https://t.me/+G7a47oWfVVgwZWYx" }]
     ];
 
     if (chatId.toString() === ADMIN_ID) {
+        botones.push([{ text: "✅ ADMIN: Enviar Aviso de Aprobación", callback_data: "masivo_aprobacion" }]);
         botones.push([{ text: "📢 ADMIN: Enviar Aviso de Cupos", callback_data: "masivo_cupos" }]);
         botones.push([{ text: "🔔 ADMIN: Despertar Inactivos", callback_data: "masivo_inactivos" }]);
     }
@@ -87,9 +89,16 @@ bot.on('callback_query', (query) => {
     listaUsuariosBot.add(chatId);
 
     if (query.data.startsWith('masivo_') && chatId.toString() === ADMIN_ID) {
-        let mensajeMasivo = query.data === 'masivo_cupos' 
-            ? "⚠️ *¡ATENCIÓN!*\nQuedan muy pocos cupos. Entra a la web, sube tus capturas y gana tus dólares."
-            : "👀 *¡Aún guardamos tu cupo!*\nVi que iniciaste el bot pero no entraste a la web. \n\n👉 Toca 'Iniciar Método' en el menú ahora mismo.";
+        let mensajeMasivo = "";
+        
+        if (query.data === 'masivo_cupos') {
+            mensajeMasivo = "⚠️ *¡ATENCIÓN!*\nQuedan muy pocos cupos. Entra a la web, sube tus capturas y gana tus dólares.";
+        } else if (query.data === 'masivo_inactivos') {
+            mensajeMasivo = "👀 *¡Aún guardamos tu cupo!*\nVi que iniciaste el bot pero no entraste a la web. \n\n👉 Toca 'Iniciar Método' en el menú ahora mismo.";
+        } else if (query.data === 'masivo_aprobacion') {
+            mensajeMasivo = "✅ *¡Revisa la Web!*\nSe acaban de aprobar varias cuentas y pasos. Si enviaste tu captura, entra a la plataforma ahora mismo para cobrar tu recompensa y seguir avanzando.";
+        }
+
         let esInactivos = query.data === 'masivo_inactivos';
 
         bot.sendMessage(ADMIN_ID, `⏳ Enviando anuncio...`);
@@ -108,9 +117,14 @@ bot.on('callback_query', (query) => {
         bot.sendMessage(chatId, "Excelente decisión. 🌐\n\nToca el botón para registrarte y empezar a sumar dólares en tu billetera:", botonWeb);
     }
 
+    if (query.data === 'ver_requisitos') {
+        bot.sendMessage(chatId, "📱 *Requisitos para participar:*\n\n1️⃣ Tener un dispositivo iPhone (iOS).\n2️⃣ Descargar la app de VPN para acceder a las ofertas de EE. UU.\n3️⃣ Seguir nuestra guía web de 5 pasos cortos.\n4️⃣ ¡Ganarás dólares directos a tu billetera por cada paso que completes!", { parse_mode: 'Markdown' });
+    }
+
     if (query.data === 'info_referidos') {
         bot.sendMessage(chatId, "🤝 *PROGRAMA DE INVITADOS*\n\n¡Gana $1 USD por cada persona que invites a usar la guía!\n\nAl registrarte, la web te dará tu enlace único. Cópialo, compártelo y mira tu billetera crecer.", { parse_mode: 'Markdown' });
     }
+    
     bot.answerCallbackQuery(query.id);
 });
 
