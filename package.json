@@ -13,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
-    "node-telegram-bot-api": "^1.2.0"
+    "node-telegram-bot-api": "^1.2.0",
+    "firebase": "^10.7.1"
   }
 }
