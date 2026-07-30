@@ -7,7 +7,7 @@ const ADMIN_ID = '8264753970';
 
 const bot = new TelegramBot(token, {polling: true});
 
-// 👇 NUEVO: Memoria para guardar a los usuarios que interactúan con el bot 👇
+// Memoria para guardar a los usuarios que interactúan con el bot
 const listaUsuariosBot = new Set();
 
 bot.onText(/\/start/, (msg) => {
@@ -25,48 +25,41 @@ bot.onText(/\/start/, (msg) => {
 
     const mensajeBienvenida = `¡Hola, ${firstName}! 👋 Bienvenido al sistema automatizado de Cupones TikTok.\n\n⚠️ *AVISO:* Solo nos quedan *12 cupos* disponibles para activar el método premium esta semana.\n\n💡 *¿Por qué cambiamos la Región y usamos VPN?*\nLos cupones y los pagos más altos de TikTok son exclusivos para el mercado de Estados Unidos. Al hacer esta configuración, le permitimos a tu teléfono acceder a estas recompensas VIP de forma 100% segura, legal y reversible.\n\nElige una de las opciones abajo para comenzar:`;
 
-    const opcionesBotones = {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "🌐 Iniciar Método (Ir a la Web)", callback_data: "iniciar_metodo" }],
-                [{ text: "📱 Ver Requisitos de iOS", callback_data: "requisitos" }],
-                [{ text: "🎁 Ganar Puntos por Invitar", callback_data: "info_referidos" }],
-                [{ text: "💬 Unirse al Canal de Dudas", url: "https://t.me/+G7a47oWfVVgwZWYx" }],
-                [{ text: "🆘 Contactar Administrador", url: "https://t.me/wilmerlucena" }] 
-            ]
-        }
-    };
+    // Lista de botones base para todos los usuarios
+    const botones = [
+        [{ text: "🌐 Iniciar Método (Ir a la Web)", callback_data: "iniciar_metodo" }],
+        [{ text: "📱 Ver Requisitos de iOS", callback_data: "requisitos" }],
+        [{ text: "🎁 Ganar Puntos por Invitar", callback_data: "info_referidos" }],
+        [{ text: "💬 Unirse al Canal de Dudas", url: "https://t.me/+G7a47oWfVVgwZWYx" }],
+        [{ text: "🆘 Contactar Administrador", url: "https://t.me/wilmerlucena" }] 
+    ];
 
-    bot.sendMessage(chatId, mensajeBienvenida, opcionesBotones);
-});
-
-// 👇 NUEVO: COMANDO SECRETO PARA EL ADMINISTRADOR (MEGÁFONO MASIVO) 👇
-bot.onText(/\/masivo (.+)/, (msg, match) => {
-    const chatId = msg.chat.id;
-    
-    // Verificamos que SOLO tú puedas usar este comando
-    if (chatId.toString() !== ADMIN_ID) {
-        return bot.sendMessage(chatId, "⛔ Comando no autorizado.");
+    // 👇 BOTONES SECRETOS: SOLO APARECEN SI ERES EL ADMINISTRADOR 👇
+    if (chatId.toString() === ADMIN_ID) {
+        botones.push([{ text: "📢 ADMIN: Enviar Aviso de Cupos", callback_data: "masivo_cupos" }]);
+        botones.push([{ text: "⚡ ADMIN: Enviar Aviso de Aprobación", callback_data: "masivo_rapido" }]);
     }
 
-    const mensajeMasivo = match[1]; // El texto que escribes después de /masivo
-    let enviados = 0;
+    bot.sendMessage(chatId, mensajeBienvenida, {
+        reply_markup: { inline_keyboard: botones }
+    });
+});
 
-    bot.sendMessage(ADMIN_ID, `⏳ Iniciando envío masivo a los usuarios registrados en memoria...`);
+// Mantengo el comando /masivo por si algún día quieres escribir uno 100% personalizado
+bot.onText(/\/masivo (.+)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    if (chatId.toString() !== ADMIN_ID) return bot.sendMessage(chatId, "⛔ Comando no autorizado.");
+
+    const mensajeMasivo = match[1];
+    bot.sendMessage(ADMIN_ID, `⏳ Iniciando envío masivo personalizado...`);
 
     listaUsuariosBot.forEach(usuarioId => {
-        // Evitamos enviarte el mensaje a ti mismo
         if (usuarioId.toString() !== ADMIN_ID) {
-            bot.sendMessage(usuarioId, `📢 *ANUNCIO DEL ADMINISTRADOR:*\n\n${mensajeMasivo}`, { parse_mode: 'Markdown' })
-                .then(() => enviados++)
-                .catch(err => console.log(`El usuario ${usuarioId} bloqueó el bot.`));
+            bot.sendMessage(usuarioId, `📢 *ANUNCIO DEL ADMINISTRADOR:*\n\n${mensajeMasivo}`, { parse_mode: 'Markdown' }).catch(e=>{});
         }
     });
 
-    // Avisamos cuando termina el proceso
-    setTimeout(() => {
-        bot.sendMessage(ADMIN_ID, `✅ *ENVÍO COMPLETADO*\nEl anuncio ha sido enviado con éxito.`, { parse_mode: 'Markdown' });
-    }, 2000);
+    setTimeout(() => { bot.sendMessage(ADMIN_ID, `✅ *ENVÍO COMPLETADO*`, { parse_mode: 'Markdown' }); }, 2000);
 });
 
 bot.on('callback_query', (query) => {
@@ -74,9 +67,35 @@ bot.on('callback_query', (query) => {
     const firstName = query.from.first_name;
     const username = query.from.username ? `@${query.from.username}` : 'Sin usuario';
 
-    // También guardamos al usuario si toca un botón
     listaUsuariosBot.add(chatId);
 
+    // 👇 LÓGICA DE LOS BOTONES DE MENSAJES PROGRAMADOS (SOLO ADMIN) 👇
+    if (query.data.startsWith('masivo_') && chatId.toString() === ADMIN_ID) {
+        let mensajeMasivo = "";
+        
+        if (query.data === 'masivo_cupos') {
+            mensajeMasivo = "⚠️ *¡ATENCIÓN!*\nQuedan muy pocos cupos disponibles para hoy. Entra ahora a la web y completa tus pasos para no perder tu lugar y asegurar tus 1000 Puntos.";
+        } else if (query.data === 'masivo_rapido') {
+            mensajeMasivo = "⚡ *¡EL ADMINISTRADOR ESTÁ EN LÍNEA!*\nEstamos aprobando todos los pasos de inmediato. Si te quedaste a medias, entra ya mismo y completa tu registro para reclamar tus cupones.";
+        }
+
+        bot.sendMessage(ADMIN_ID, `⏳ Enviando anuncio pre-programado a los usuarios...`);
+        
+        listaUsuariosBot.forEach(usuarioId => {
+            if (usuarioId.toString() !== ADMIN_ID) {
+                bot.sendMessage(usuarioId, `📢 *ANUNCIO:* \n\n${mensajeMasivo}`, { parse_mode: 'Markdown' }).catch(e=>{});
+            }
+        });
+
+        setTimeout(() => {
+            bot.sendMessage(ADMIN_ID, `✅ *ENVÍO COMPLETADO*\nEl anuncio ha sido enviado con éxito.`, { parse_mode: 'Markdown' });
+        }, 2000);
+        
+        bot.answerCallbackQuery(query.id);
+        return;
+    }
+
+    // RESPUESTAS NORMALES A LOS USUARIOS
     if (query.data === 'requisitos') {
         if (chatId.toString() !== ADMIN_ID) {
             const alertaAdmin = `🖱️ *NUEVO CLIC*\n👤 Nombre: ${firstName}\n🔗 Usuario: ${username}\n👆 Acción: Vio los requisitos de iOS`;
